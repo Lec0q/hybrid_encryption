@@ -65,7 +65,19 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         
         # Bước 5: Nhận dữ liệu được mã hóa (JSON) từ client
         print("\n[Server] Step 5 - Waiting to receive encrypted file data from client...")
-        data = conn.recv(4096)
+        data = b""
+        while True:
+            packet = conn.recv(4096)
+            if not packet:
+                break
+            data += packet
+            try:
+                # Kiểm tra xem dữ liệu đã đầy đủ chưa
+                json.loads(data.decode())
+                break
+            except json.JSONDecodeError:
+                continue
+
         if not data:
             print("[Server] Error: No data received from client.")
         else:
@@ -102,9 +114,4 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             with open(output_filename, "wb") as f_out:
                 f_out.write(file_data)
             print(f"\n[Server] Step 8 - Decryption complete. Decrypted file saved as '{output_filename}'.")
-            print("\n[Server] Decrypted file content:")
-            try:
-                # Giả định tệp chứa văn bản
-                print(file_data.decode())
-            except UnicodeDecodeError:
-                print("[Server] Decrypted file is not valid text data.")
+           
